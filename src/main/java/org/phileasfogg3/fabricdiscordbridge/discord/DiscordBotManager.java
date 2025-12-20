@@ -2,9 +2,12 @@ package org.phileasfogg3.fabricdiscordbridge.discord;
 
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
+import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.minecraft.server.MinecraftServer;
 import org.phileasfogg3.fabricdiscordbridge.config.FabricDiscordBridgeConfig;
+
+import java.util.Objects;
 
 public final class DiscordBotManager {
 
@@ -21,11 +24,15 @@ public final class DiscordBotManager {
             throw new IllegalStateException("Bot token is missing in config!");
         }
 
-        jda = JDABuilder.createDefault(config.botToken)
-                .addEventListeners(new DiscordMessageListener(server, config))
+        JDABuilder builder = JDABuilder.createDefault(config.botToken)
                 .enableIntents(GatewayIntent.MESSAGE_CONTENT)
-                .build();
+                .addEventListeners(new DiscordMessageListener(server, config));
 
+
+        // Set initial activity
+        updateActivity(server, builder);
+
+        jda = builder.build();
         jda.awaitReady();
     }
 
@@ -51,5 +58,31 @@ public final class DiscordBotManager {
     /** Get current JDA instance */
     public static JDA getJDA() {
         return jda;
+    }
+
+    /** Update bot activity, replacing %playercount% if present */
+    public static void updateActivity(MinecraftServer server, Object target) {
+        if (config == null) return;
+
+        String doing = config.botDoing != null ? config.botDoing : "";
+        if (doing.contains("%playercount%") && server != null) {
+            int online = server.getPlayerManager().getCurrentPlayerCount();
+            doing = doing.replace("%playercount%", String.valueOf(online));
+        }
+
+        Activity activity = switch (config.botActivity) {
+            case "watching" -> Activity.watching(Objects.requireNonNull(doing));
+            case "competing" -> Activity.competing(Objects.requireNonNull(doing));
+            case "listening" -> Activity.listening(Objects.requireNonNull(doing));
+            case "playing" -> Activity.playing(Objects.requireNonNull(doing));
+            case "streaming" -> Activity.streaming(doing, Objects.requireNonNull(config.botStreamingUrl));
+            default -> Activity.playing("playnexia.net");
+        };
+
+        if (target instanceof JDABuilder builder) {
+            builder.setActivity(activity);
+        } else if (target instanceof JDA jdaInstance) {
+            jdaInstance.getPresence().setActivity(activity);
+        }
     }
 }

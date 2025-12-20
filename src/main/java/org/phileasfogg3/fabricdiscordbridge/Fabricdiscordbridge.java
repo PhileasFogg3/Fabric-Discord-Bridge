@@ -2,6 +2,7 @@ package org.phileasfogg3.fabricdiscordbridge;
 
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
+import net.dv8tion.jda.api.requests.restaction.ChannelAction;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
@@ -13,25 +14,27 @@ import org.phileasfogg3.fabricdiscordbridge.minecraft.MinecraftChatListener;
 import org.phileasfogg3.fabricdiscordbridge.utils.ConfigManager;
 import org.phileasfogg3.fabricdiscordbridge.config.FabricDiscordBridgeConfig;
 
-import java.util.concurrent.ExecutorService;
+import java.time.Instant;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public class Fabricdiscordbridge implements ModInitializer {
 
     private static JDA jda;
-    private static ExecutorService jdaExecutor;
-
+    private static ScheduledExecutorService jdaExecutor;
     public static FabricDiscordBridgeConfig CONFIG;
+    private static MinecraftChatListener chatListener;
 
-    private TextChannel discordChannelMinecraft;
+    private static int lastPlayerCount = -1;
 
     @Override
     public void onInitialize() {
 
-        jdaExecutor = Executors.newSingleThreadExecutor(r ->
-                new Thread(r, "FabricDiscordBridge"));
+        // Scheduled executor for topic updates
+        jdaExecutor = Executors.newSingleThreadScheduledExecutor(r -> new Thread(r, "FabricDiscordBridge"));
 
-        // Load config and warn if token missing
+        // Load config and register listener ONCE
         ServerLifecycleEvents.SERVER_STARTING.register(server -> {
             CONFIG = ConfigManager.load();
 
@@ -40,82 +43,105 @@ public class Fabricdiscordbridge implements ModInitializer {
             }
 
             if (CONFIG.discordChannelToMinecraft == CONFIG.discordChannelDisplayConsole) {
-                System.err.println("[DiscordBot] The console and main channel are set to be the same discord channel!");
-                DiscordBotManager.stop();
+                System.err.println("[DiscordBot] Console and main channel cannot be the same!");
             }
+
+            chatListener = new MinecraftChatListener(CONFIG);
+            chatListener.register();
         });
 
-        // Start Discord bot once the server is ready
+        // Start bot and topic updater when server is fully ready
         ServerLifecycleEvents.SERVER_STARTED.register(server -> {
             try {
                 DiscordBotManager.start(CONFIG, server);
                 jda = DiscordBotManager.getJDA();
+
+                if (CONFIG.announceServerStartup && jda != null) {
+                    sendStartupMessage();
+                }
+
+                // Start periodic topic updates
+                startUpdateActivity(server);
+
             } catch (Exception e) {
                 throw new RuntimeException("Failed to start Discord bot", e);
             }
-
-            if (CONFIG.announceServerStartup && (jda != null)) {
-                enableMessage();
-            }
-
-            registerEvents();
-
         });
 
-        ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
+        // Clean shutdown
+        ServerLifecycleEvents.SERVER_STOPPING.register(server -> {
 
             if (CONFIG.announceServerDisable && jda != null) {
-                disableMessage();
+                sendShutdownMessage();
             }
 
-        });
-
-        // Stop Discord bot when server stops
-        ServerLifecycleEvents.SERVER_STOPPING.register(server -> {
             DiscordBotManager.stop();
+
+            if (jdaExecutor != null) {
+                jdaExecutor.shutdownNow();
+            }
         });
 
+        // Commands
         CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
             dispatcher.register(
                     CommandManager.literal("discordbridge")
-                            .requires(source -> {
-                                if (source.getPlayer() == null) return true; // console allowed
-                                return source.getServer().getPlayerManager().isOperator(
-                                        source.getPlayer().getPlayerConfigEntry()
-                                );
-                            })
+                            .requires(source ->
+                                    source.getPlayer() == null ||
+                                            source.getServer().getPlayerManager()
+                                                    .isOperator(source.getPlayer().getPlayerConfigEntry())
+                            )
                             .then(CommandManager.literal("reload")
                                     .executes(ctx -> {
-                                        // Pass server to reload for listener
-                                        return DiscordBridgeReloadCommand.execute(ctx.getSource(), ctx.getSource().getServer());
+                                        // Reload config
+                                        FabricDiscordBridgeConfig newConfig = ConfigManager.load();
+                                        CONFIG = newConfig;
+
+                                        // Update listener with new config
+                                        if (chatListener != null) {
+                                            chatListener.updateConfig(newConfig);
+                                        }
+
+                                        // Reload bot
+                                        try {
+                                            DiscordBotManager.reload(newConfig, ctx.getSource().getServer());
+                                        } catch (Exception e) {
+                                            throw new RuntimeException(e);
+                                        }
+
+                                        return DiscordBridgeReloadCommand.execute(
+                                                ctx.getSource(),
+                                                ctx.getSource().getServer()
+                                        );
                                     })
                             )
             );
         });
-
     }
 
-    public void enableMessage() {
-
+    private void sendStartupMessage() {
         TextChannel channel = jda.getTextChannelById(CONFIG.discordChannelToMinecraft);
         if (channel != null) {
             channel.sendMessage(CONFIG.serverStartupMessageFormat).queue();
         }
-
     }
 
-    public void disableMessage() {
-
+    private void sendShutdownMessage() {
         TextChannel channel = jda.getTextChannelById(CONFIG.discordChannelToMinecraft);
         if (channel != null) {
             channel.sendMessage(CONFIG.serverDisableMessageFormat).queue();
         }
-
     }
 
-    public void registerEvents() {
+    private void startUpdateActivity(MinecraftServer server) {
 
-        new MinecraftChatListener().register();
+        jdaExecutor.scheduleWithFixedDelay(() -> {
+            try {
+                DiscordBotManager.updateActivity(server, jda); // updates bot activity
+            } catch (Exception e) {
+                System.err.println("[FDB] Failed to update bot status or topic: " + e.getMessage());
+            }
+        }, 0, 2, TimeUnit.MINUTES);
 
     }
 }

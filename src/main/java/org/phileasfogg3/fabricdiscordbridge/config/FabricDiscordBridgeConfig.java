@@ -66,7 +66,7 @@ public class FabricDiscordBridgeConfig {
     public static class DiscordMessageFormatting {
         public String messageFormat;
         public boolean webhooks;
-        public static String discord_webhook_url;
+        public String discord_webhook_url;
     }
 
     public static class JoinLeaveFormatting {

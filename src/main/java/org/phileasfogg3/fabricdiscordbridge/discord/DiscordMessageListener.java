@@ -16,15 +16,17 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static com.mojang.text2speech.Narrator.LOGGER;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class DiscordMessageListener extends ListenerAdapter {
 
     private final MinecraftServer server;
     private final FabricDiscordBridgeConfig config;
 
-    private static final Pattern CUSTOM_EMOJI =
-            Pattern.compile("<:(\\w+):(\\d+)>");
+    private static final Pattern CUSTOM_EMOJI = Pattern.compile("<:(\\w+):(\\d+)>");
+
+    private static final Logger LOGGER = LoggerFactory.getLogger("FabricDiscordBridge");
 
     public DiscordMessageListener(MinecraftServer server, FabricDiscordBridgeConfig config) {
         this.server = server;
@@ -110,21 +112,30 @@ public class DiscordMessageListener extends ListenerAdapter {
         if (!allowed) return;
 
         String raw = e.getMessage().getContentRaw().trim();
-        if (raw.isEmpty() || !e.getMessage().getAttachments().isEmpty() || !e.getMessage().getEmbeds().isEmpty()) return;
-        if (raw.contains("<@")) return;
-
-        String command = raw.startsWith("/") ? raw : "/" + raw;
+        if (raw.isEmpty()
+                || !e.getMessage().getAttachments().isEmpty()
+                || !e.getMessage().getEmbeds().isEmpty()
+                || raw.contains("<@")) {
+            return;
+        }
 
         server.execute(() -> {
             try {
+                String cmd = raw.startsWith("/") ? raw.substring(1) : raw;
+
                 var dispatcher = server.getCommandManager().getDispatcher();
                 var source = server.getCommandSource();
-                ParseResults<ServerCommandSource> parse = dispatcher.parse(command, source);
+
+                ParseResults<ServerCommandSource> parse =
+                        dispatcher.parse(cmd, source);
+
                 dispatcher.execute(parse);
+
             } catch (Exception ex) {
-                LOGGER.error("Failed to execute Discord command: {}", command, ex);
+                LOGGER.error("Failed to execute Discord command: {}", raw, ex);
             }
         });
+
     }
 
     // ============================
