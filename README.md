@@ -11,7 +11,7 @@
 
 ---
 
-## 📖 Brief Description
+## Description
 
 Discord bridge integrates your Minecraft Fabric server with your discord server, allowing admins to take action remotely and community members to interact with one another.
 
@@ -21,11 +21,11 @@ Features Include:
 - Ability to send commands to the server via discord.
 - Fully customisable formatting.
 - Ability to use webhooks for player messages.
-- Integration with **Nexia Utils**.
+- Integration with **Nexia Utils** (also still in development).
 
 ---
 
-## ⌨️ Commands
+## Commands
 
 COMMANDS SECTION (TO DO)
 
@@ -46,7 +46,7 @@ COMMANDS SECTION (TO DO)
 
 ---
 
-## ⚙️ Example Configuration
+## Example Configuration
 
 Click below to expand an example configuration file.
 
