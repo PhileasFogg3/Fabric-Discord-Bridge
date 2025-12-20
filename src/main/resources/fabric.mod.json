@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "fabricdiscordbridge",
+  "version": "${version}",
+  "name": "FabricDiscordBridge",
+  "description": "Fabric version of DiscordBridge",
+  "authors": [],
+  "contact": {},
+  "license": "MIT",
+  "icon": "assets/fabricdiscordbridge/icon.png",
+  "environment": "server",
+  "entrypoints": {
+    "main": [
+      "org.phileasfogg3.fabricdiscordbridge.Fabricdiscordbridge"
+    ]
+  },
+  "depends": {
+    "fabricloader": ">=0.15.0",
+    "fabric": "*",
+    "minecraft": "1.21.11"
+  }
+}
