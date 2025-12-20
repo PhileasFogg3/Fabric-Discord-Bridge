@@ -60,8 +60,8 @@ Click below to expand an example configuration file.
 # This file controls how your Minecraft server connects
 # to Discord and how messages are formatted.
 #
-# Any changes require a SERVER RESTART unless you
-# implement a reload command.
+# Most changes can be applied with the reload command
+# however for production servers a restart is recommended.
 # =====================================================
 
 
@@ -324,10 +324,9 @@ serverDisableMessageFormat: ':octagonal_sign: **Server has stopped**'
 # before being sent to Minecraft chat.
 translateDiscordEmojisToText: true
 
-
-
-
 ```
+
+
 </details>
 
 ## Building the Mod
