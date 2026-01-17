@@ -12,6 +12,10 @@ base {
 
 repositories {
     mavenCentral()
+
+    maven {
+        url = "https://maven.luckperms.net"
+    }
 }
 
 dependencies {
@@ -71,6 +75,9 @@ dependencies {
     // ===== org.json (required by emoji-java) =====
     implementation "org.json:json:20240303"
     include "org.json:json:20240303"
+
+    // ===== LuckPerms =====
+    modImplementation "net.luckperms:api:5.4"
 
 }
 

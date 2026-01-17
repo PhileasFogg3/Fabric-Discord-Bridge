@@ -1,0 +1,11 @@
+{
+  "required": true,
+  "package": "org.phileasfogg3.fabricdiscordbridge.mixins",
+  "compatibilityLevel": "JAVA_17",
+  "mixins": [
+    "AdvancementGrantMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

@@ -19,6 +19,12 @@ public class FabricDiscordBridgeConfig {
     // --- Formatting ---
     public MinecraftMessageFormatting minecraftMessageFormatting;
     public DiscordMessageFormatting discordMessageFormatting;
+    public JoinLeaveFormatting joinLeaveFormatting;
+    public EventFormatting eventFormatting;
+    public AfkFormatting afkFormatting;
+    public Image image;
+    public Thumbnail thumbnail;
+    public ImageSettings imageSettings;
 
     // --- Join / Leave ---
     public boolean joinLeaveMessageEnabled = true;
@@ -37,7 +43,6 @@ public class FabricDiscordBridgeConfig {
 
     // --- AFK ---
     public boolean announceAfkEnabled = true;
-    public AfkFormatting afkFormatting;
 
     // --- Server lifecycle ---
     public boolean announceServerStartup = true;

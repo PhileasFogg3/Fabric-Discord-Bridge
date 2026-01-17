@@ -10,6 +10,8 @@ import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.MinecraftServer;
 import org.phileasfogg3.fabricdiscordbridge.commands.DiscordBridgeReloadCommand;
 import org.phileasfogg3.fabricdiscordbridge.discord.DiscordBotManager;
+import org.phileasfogg3.fabricdiscordbridge.minecraft.DeathHandler;
+import org.phileasfogg3.fabricdiscordbridge.minecraft.JoinLeaveHandler;
 import org.phileasfogg3.fabricdiscordbridge.minecraft.MinecraftChatListener;
 import org.phileasfogg3.fabricdiscordbridge.utils.ConfigManager;
 import org.phileasfogg3.fabricdiscordbridge.config.FabricDiscordBridgeConfig;
@@ -25,6 +27,8 @@ public class Fabricdiscordbridge implements ModInitializer {
     private static ScheduledExecutorService jdaExecutor;
     public static FabricDiscordBridgeConfig CONFIG;
     private static MinecraftChatListener chatListener;
+    private static JoinLeaveHandler joinLeaveHandler;
+    private static DeathHandler deathHandler;
 
     private static int lastPlayerCount = -1;
 
@@ -48,6 +52,7 @@ public class Fabricdiscordbridge implements ModInitializer {
 
             chatListener = new MinecraftChatListener(CONFIG);
             chatListener.register();
+
         });
 
         // Start bot and topic updater when server is fully ready
@@ -66,6 +71,13 @@ public class Fabricdiscordbridge implements ModInitializer {
             } catch (Exception e) {
                 throw new RuntimeException("Failed to start Discord bot", e);
             }
+
+            joinLeaveHandler = new JoinLeaveHandler(server, CONFIG, jda.getTextChannelById(CONFIG.discordChannelToMinecraft));
+            joinLeaveHandler.register();
+
+            deathHandler = new DeathHandler(server, CONFIG, jda.getTextChannelById(CONFIG.discordChannelToMinecraft));
+            deathHandler.register();
+
         });
 
         // Clean shutdown

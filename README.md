@@ -25,6 +25,10 @@ Features Include:
 
 ---
 
+## Dependencies
+- Fabric Api
+- LuckPerms
+
 ## Commands
 
 COMMANDS SECTION (TO DO)
@@ -345,7 +349,6 @@ cd discord-bridge
 ```
 
 ## Known Issues
-- The reload command does not work if you want to hot change between webhook messages and bot messages
 
 ## License
 This project is licensed under the MIT License
