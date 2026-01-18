@@ -90,10 +90,17 @@ public class DiscordMessageListener extends ListenerAdapter {
                 .replace("%toprolecolour%", roleColour)
                 .replace("%message%", message);
 
-        server.execute(() ->
+        server.execute(() -> {
+
+            String replyHeader = buildReplyHeader(e, fmt);
+            if (replyHeader != null) {
                 server.getPlayerManager()
-                        .broadcast(Text.literal(colour(formatted)), false)
-        );
+                        .broadcast(Text.literal(colour(replyHeader)), false);
+            }
+
+            server.getPlayerManager()
+                    .broadcast(Text.literal(colour(formatted)), false);
+        });
     }
 
     // ============================
@@ -170,6 +177,85 @@ public class DiscordMessageListener extends ListenerAdapter {
 
         return out.toString();
     }
+
+    private String buildReplyHeader(MessageReceivedEvent e, FabricDiscordBridgeConfig.MinecraftMessageFormatting fmt) {
+        var referenced = e.getMessage().getReferencedMessage();
+        if (referenced == null) return null;
+
+        // Case 1: Replying to webhook (Minecraft message)
+        if (referenced.isWebhookMessage()) {
+
+            String content = referenced.getContentDisplay();
+            if (content.isBlank()) content = "<no text>";
+            if (content.length() > 80) {
+                content = content.substring(0, 77) + "...";
+            }
+
+            // Use the SAME formatting as a normal MC-origin message
+            String formatted = fmt.messageFormatUserWithNoRole
+                    .replace("%name%", referenced.getAuthor().getName())
+                    .replace("%username%", referenced.getAuthor().getName())
+                    .replace("%toprole%", "")
+                    .replace("%toprolecolour%", fmt.otherRoleColourCode)
+                    .replace("%message%", "&8" + content);
+
+            return "┌──── " + formatted;
+        }
+
+        // Case 2: Normal Discord user
+        var member = referenced.getMember();
+        if (member == null) return null;
+
+        List<Role> roles = member.getRoles();
+        String topRole = roles.isEmpty() ? "" : roles.get(0).getName();
+
+        String roleColour = fmt.otherRoleColourCode;
+        String format;
+
+        if (!roles.isEmpty() && !fmt.excludedRoles.contains(topRole)) {
+            format = fmt.messageFormatUserWithRole;
+            if (fmt.roles.containsKey(topRole)) {
+                roleColour = fmt.roles.get(topRole);
+            }
+        } else {
+            format = fmt.messageFormatUserWithNoRole;
+        }
+
+        String content = referenced.getContentDisplay();
+        if (content.isBlank()) content = "<no text>";
+        if (content.length() > 80) {
+            content = content.substring(0, 77) + "...";
+        }
+
+        String formatted = formatDiscordMessage(
+                format,
+                member.getEffectiveName(),
+                referenced.getAuthor().getName(),
+                topRole,
+                roleColour,
+                "&8" + content
+        );
+
+        return "┌──── " + formatted;
+    }
+
+
+    private String formatDiscordMessage(
+            String format,
+            String name,
+            String username,
+            String topRole,
+            String roleColour,
+            String message
+    ) {
+        return format
+                .replace("%name%", name)
+                .replace("%username%", username)
+                .replace("%toprole%", topRole)
+                .replace("%toprolecolour%", roleColour)
+                .replace("%message%", message);
+    }
+
 
     private static String colour(String input) {
         return input.replace('&', '§');
