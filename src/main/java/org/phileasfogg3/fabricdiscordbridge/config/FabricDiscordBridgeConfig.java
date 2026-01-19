@@ -25,6 +25,7 @@ public class FabricDiscordBridgeConfig {
     public Image image;
     public Thumbnail thumbnail;
     public ImageSettings imageSettings;
+    public Replies replies;
 
     // --- Join / Leave ---
     public boolean joinLeaveMessageEnabled = true;
@@ -72,6 +73,14 @@ public class FabricDiscordBridgeConfig {
         public String messageFormat;
         public boolean webhooks;
         public String discord_webhook_url;
+    }
+
+    public static class Replies {
+        public boolean enabled;
+        public String replyPrefix;
+        public String replyContentColour;
+        public int replyContentCharCutoff;
+        public String noTextMessage;
     }
 
     public static class JoinLeaveFormatting {

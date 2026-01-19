@@ -108,6 +108,14 @@ discordMessageFormatting:
   # If you want to use webhooks, you must create the webhook in the required channel, copy the link and paste it here.
   discord_webhook_url: "https://discord.com/api/webhooks/...."
 
+  # Options for replies to discord messages
+
+replies:
+  enabled: true
+  replyPrefix: "┌──── "
+  replyContentColour: "&8"
+  replyContentCharCutoff: 80
+  noTextMessage: "Unknown Message. Why?"
 
 
 # -----------------------------------------------------

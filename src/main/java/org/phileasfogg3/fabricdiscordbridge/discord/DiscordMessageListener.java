@@ -179,27 +179,22 @@ public class DiscordMessageListener extends ListenerAdapter {
     }
 
     private String buildReplyHeader(MessageReceivedEvent e, FabricDiscordBridgeConfig.MinecraftMessageFormatting fmt) {
+
         var referenced = e.getMessage().getReferencedMessage();
+
+        // Do not return if empty message
         if (referenced == null) return null;
 
         // Case 1: Replying to webhook (Minecraft message)
         if (referenced.isWebhookMessage()) {
 
             String content = referenced.getContentDisplay();
-            if (content.isBlank()) content = "<no text>";
-            if (content.length() > 80) {
-                content = content.substring(0, 77) + "...";
+            if (content.isBlank()) content = config.replies.noTextMessage;
+            if (content.length() > config.replies.replyContentCharCutoff) {
+                content = content.substring(0, config.replies.replyContentCharCutoff-3) + "...";
             }
 
-            // Use the SAME formatting as a normal MC-origin message
-            String formatted = fmt.messageFormatUserWithNoRole
-                    .replace("%name%", referenced.getAuthor().getName())
-                    .replace("%username%", referenced.getAuthor().getName())
-                    .replace("%toprole%", "")
-                    .replace("%toprolecolour%", fmt.otherRoleColourCode)
-                    .replace("%message%", "&8" + content);
-
-            return "┌──── " + formatted;
+            return config.replies.replyPrefix + formatDiscordMessage(fmt.messageFormatUserWithNoRole, referenced.getAuthor().getName(), referenced.getAuthor().getEffectiveName(), "", fmt.otherRoleColourCode, config.replies.replyContentColour + content);
         }
 
         // Case 2: Normal Discord user
@@ -222,9 +217,9 @@ public class DiscordMessageListener extends ListenerAdapter {
         }
 
         String content = referenced.getContentDisplay();
-        if (content.isBlank()) content = "<no text>";
-        if (content.length() > 80) {
-            content = content.substring(0, 77) + "...";
+        if (content.isBlank()) content = config.replies.noTextMessage;
+        if (content.length() > config.replies.replyContentCharCutoff) {
+            content = content.substring(0, config.replies.replyContentCharCutoff-3) + "...";
         }
 
         String formatted = formatDiscordMessage(
@@ -233,10 +228,10 @@ public class DiscordMessageListener extends ListenerAdapter {
                 referenced.getAuthor().getName(),
                 topRole,
                 roleColour,
-                "&8" + content
+                config.replies.replyContentColour + content
         );
 
-        return "┌──── " + formatted;
+        return config.replies.replyPrefix + formatted;
     }
 
 
