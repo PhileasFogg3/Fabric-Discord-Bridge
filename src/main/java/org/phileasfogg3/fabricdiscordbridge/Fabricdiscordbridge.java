@@ -10,6 +10,7 @@ import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.MinecraftServer;
 import org.phileasfogg3.fabricdiscordbridge.commands.DiscordBridgeReloadCommand;
 import org.phileasfogg3.fabricdiscordbridge.discord.DiscordBotManager;
+import org.phileasfogg3.fabricdiscordbridge.discord.DiscordLogAppender;
 import org.phileasfogg3.fabricdiscordbridge.minecraft.DeathHandler;
 import org.phileasfogg3.fabricdiscordbridge.minecraft.JoinLeaveHandler;
 import org.phileasfogg3.fabricdiscordbridge.minecraft.MinecraftChatListener;
@@ -23,6 +24,8 @@ import java.util.concurrent.TimeUnit;
 
 public class Fabricdiscordbridge implements ModInitializer {
 
+    public static Fabricdiscordbridge INSTANCE;
+
     private static JDA jda;
     private static ScheduledExecutorService jdaExecutor;
     public static FabricDiscordBridgeConfig CONFIG;
@@ -34,6 +37,8 @@ public class Fabricdiscordbridge implements ModInitializer {
 
     @Override
     public void onInitialize() {
+
+        INSTANCE = this;
 
         // Scheduled executor for topic updates
         jdaExecutor = Executors.newSingleThreadScheduledExecutor(r -> new Thread(r, "FabricDiscordBridge"));
@@ -50,6 +55,10 @@ public class Fabricdiscordbridge implements ModInitializer {
                 System.err.println("[DiscordBot] Console and main channel cannot be the same!");
             }
 
+            // Register Log Appender
+            DiscordLogAppender.register();
+
+            // Register Chat Listener
             chatListener = new MinecraftChatListener(CONFIG);
             chatListener.register();
 
