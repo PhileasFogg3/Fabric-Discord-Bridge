@@ -2,7 +2,6 @@ package org.phileasfogg3.fabricdiscordbridge;
 
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
-import net.dv8tion.jda.api.requests.restaction.ChannelAction;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
@@ -17,7 +16,6 @@ import org.phileasfogg3.fabricdiscordbridge.minecraft.MinecraftChatListener;
 import org.phileasfogg3.fabricdiscordbridge.utils.ConfigManager;
 import org.phileasfogg3.fabricdiscordbridge.config.FabricDiscordBridgeConfig;
 
-import java.time.Instant;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -33,7 +31,6 @@ public class Fabricdiscordbridge implements ModInitializer {
     private static JoinLeaveHandler joinLeaveHandler;
     private static DeathHandler deathHandler;
 
-    private static int lastPlayerCount = -1;
 
     @Override
     public void onInitialize() {

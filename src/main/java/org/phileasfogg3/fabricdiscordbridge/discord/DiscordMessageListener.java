@@ -94,12 +94,10 @@ public class DiscordMessageListener extends ListenerAdapter {
 
             String replyHeader = buildReplyHeader(e, fmt);
             if (replyHeader != null) {
-                server.getPlayerManager()
-                        .broadcast(Text.literal(colour(replyHeader)), false);
+                server.getPlayerManager().broadcast(Text.literal(colour(replyHeader)), false);
             }
 
-            server.getPlayerManager()
-                    .broadcast(Text.literal(colour(formatted)), false);
+            server.getPlayerManager().broadcast(Text.literal(colour(formatted)), false);
         });
     }
 
